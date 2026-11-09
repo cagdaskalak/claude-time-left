@@ -1,0 +1,5 @@
+{
+  "name": "claude-time-left",
+  "owner": { "name": "Cagdas Kalak" },
+  "plugins": [{ "name": "time-left", "source": "./", "description": "About how long is left on what Claude is doing." }]
+}

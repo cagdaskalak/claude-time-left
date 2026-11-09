@@ -1,0 +1,10 @@
+{
+  "name": "time-left",
+  "version": "1.0.0",
+  "description": "See about how long is left on what Claude is doing: the whole job, not one tool call. A live band with a time range, progress and what runs now.",
+  "author": { "name": "Cagdas Kalak" },
+  "license": "MIT",
+  "repository": "https://github.com/cagdaskalak/claude-time-left",
+  "keywords": ["eta", "progress", "time-left", "status", "ui"],
+  "types": "./types/index.d.ts"
+}
