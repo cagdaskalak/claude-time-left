@@ -88,11 +88,13 @@ export function estimate(job: Job, hist: History, now: number): Estimate {
   let basis = ''
   if (steps.length > 0 && (current || pending.length > 0)) {
     const own = median(doneTimes)
-    const allPast = hist['step:*'] ?? []
+    // A step is priced by this job's own finished steps, or by the same step
+    // timed before. Steps from unrelated work are no basis: their average
+    // made a 90-second job read "about 2–8 min" before its first step ended.
     const perStep = (s: Step): number | undefined => {
       const similar = median(hist[stepKey(s.text)] ?? [])
       if (similar !== undefined && (own === undefined || doneTimes.length < 2)) return similar
-      return own ?? (allPast.length >= 3 ? median(allPast) : undefined)
+      return own
     }
     let sum = 0
     let isKnown = true
@@ -186,6 +188,14 @@ export function estimate(job: Job, hist: History, now: number): Estimate {
   return { low, high, isFloor, progress, basis }
 }
 
+const NICE_S = [5, 10, 15, 20, 30, 45]
+
+/** Seconds rounded down to a plain step: 5, 10, 15, 20, 30 or 45. */
+function niceSeconds(ms: number): number {
+  const s = ms / 1000
+  return [...NICE_S].reverse().find(n => n <= s) ?? 5
+}
+
 const NICE_MIN = [1, 2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 30, 40, 45, 50, 60]
 
 function niceMinutes(ms: number, up: boolean): number {
@@ -198,6 +208,9 @@ function niceMinutes(ms: number, up: boolean): number {
 export function formatLeft(e: Estimate): string {
   if (e.low === undefined || e.high === undefined) return 'no estimate yet'
   const lead = e.isFloor ? 'at least ' : 'about '
+  // A small floor is said in seconds: "at least a minute" read wrong when
+  // 20 seconds of known work were left beside untimed background work.
+  if (e.isFloor && e.low < 0.9 * MIN) return `at least ${niceSeconds(e.low)} s`
   if (e.high < 1.2 * MIN) return e.isFloor ? 'at least a minute' : 'under a minute'
   if (e.low >= 50 * MIN) {
     const lo = Math.max(1, Math.round(e.low / (60 * MIN)))

@@ -54,6 +54,31 @@ test('background work with no timing makes the guess a floor', async () => {
   expect(formatLeft(known)).toMatch(/^about/)
 })
 
+test('unrelated past steps are no basis; the same step timed before is', async () => {
+  const j = jobWith({
+    steps: [
+      { text: 'Render the bar gallery', status: 'in_progress', startedAt: 0 },
+      { text: 'Run the tests', status: 'pending' },
+    ],
+  })
+  const unrelated = { 'step:*': [5 * MIN, 6 * MIN, 7 * MIN, 8 * MIN] }
+  expect(formatLeft(estimate(j, unrelated, 5_000))).toBe('no estimate yet')
+  const same = { [stepKey('Render the bar gallery')]: [20_000], [stepKey('Run the tests')]: [10_000] }
+  expect(formatLeft(estimate(j, same, 5_000))).toBe('under a minute')
+})
+
+test('a small floor beside untimed background work is said in seconds', async () => {
+  const j = jobWith({
+    isTurnRunning: true,
+    steps: [
+      { text: 'a', status: 'completed', startedAt: 0, endedAt: 20_000 },
+      { text: 'b', status: 'in_progress', startedAt: 20_000 },
+    ],
+    bg: [{ id: 't', kind: 'shell', label: 'synth', sig: 'shell:python synth', startedAt: 20_000, aliases: [] }],
+  })
+  expect(formatLeft(estimate(j, {}, 25_000))).toMatch(/^at least \d+ s$/)
+})
+
 test('similar work shares a history key', async () => {
   expect(shellKey('cd /x && .venv/bin/python -I -m pytest -q')).toBe(shellKey('.venv/bin/python -m pytest tests'))
   expect(stepKey('Run the fast tests')).toBe(stepKey('Run fast tests!'))
