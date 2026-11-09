@@ -2,6 +2,8 @@
 
 **See about how long is left on what Claude is doing.** Not one tool call: the whole job.
 
+![time-left during a real run: the range updates as steps finish](assets/demo.gif)
+
 A live band above the chat box answers the question you keep asking while Claude works: *how much longer?* It reads Claude's own task list, the steps already done, the commands, agents and workflows running in the background, and how long similar work took before, and turns that into one honest line:
 
 > **About 10–20 min left**
